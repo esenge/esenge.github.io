@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <div style="margin-buttom: 20px;">
+            <div>
+                <input id="m00" type="number" value="0">
+                <input id="m01" type="number" value="9">
+                <input id="m02" type="number" value="0">
+            </div>
+            <div>
+                <input id="m10" type="number" value="9">
+                <input id="m11" type="number" value="-36">
+                <input id="m12" type="number" value="9">
+            </div>
+            <div>
+                <input id="m20" type="number" value="0">
+                <input id="m21" type="number" value="9">
+                <input id="m22" type="number" value="0">
+            </div>
+            <canvas id="canvas" style="margin-top: 20px; margin-bottom: 20px;"></canvas>
+        </div>
+        <div style="float: left">
+            <button id="reset">Rādīt oriģinālo attēlu</button>
+            <button id="blurButton">Blur</button>
+            <button id="sharpenButton">Sharpen</button>
+            <button id="customButton">Custom</button>
+            <div id="buttons"></div>
+        </div>
+
+        <script>
+            function CanvasImage(canvas, src) {
+                // ielādē bildi
+                var context = canvas.getContext('2d');
+                var i = new Image();
+                var that = this;
+                i.onload = function(){
+                    canvas.width = i.width;
+                    canvas.height = i.height;
+                    context.drawImage(i, 0, 0, i.width, i.height);
+
+                    // atcerās oriģinālos pikseļus
+                    that.original = that.getData();
+                };
+                i.src = src;
+
+                // saglabā tos
+                this.context = context;
+                this.image = i;
+            }
+
+            CanvasImage.prototype.getData = function() {
+                return this.context.getImageData(0, 0, this.image.width, this.image.height);
+            };
+
+            CanvasImage.prototype.setData = function(data) {
+                return this.context.putImageData(data, 0, 0);
+            };
+
+            CanvasImage.prototype.reset = function() {
+                this.setData(this.original);
+            }
+
+            CanvasImage.prototype.convolve = function(matrix, divisor, offset) {
+                var m = [].concat(matrix[0], matrix[1], matrix[2]); // flatten
+                if (!divisor) {
+                    divisor = m.reduce(function(a, b) {return a + b;}) || 1; // sum
+                }
+                var olddata = this.original;
+                var oldpx = olddata.data;
+                var newdata = this.context.createImageData(olddata);
+                var newpx = newdata.data
+                var len = newpx.length;
+                var res = 0;
+                var w = this.image.width;
+                for (var i = 0; i < len; i++) {
+                    if ((i + 1) % 4 === 0) {
+                        newpx[i] = oldpx[i];
+                        continue;
+                    }
+                    res = 0;
+                    var these = [
+                        oldpx[i - w * 4 - 4] || oldpx[i],
+                        oldpx[i - w * 4]     || oldpx[i],
+                        oldpx[i - w * 4 + 4] || oldpx[i],
+                        oldpx[i - 4]         || oldpx[i],
+                        oldpx[i],
+                        oldpx[i + 4]         || oldpx[i],
+                        oldpx[i + w * 4 - 4] || oldpx[i],
+                        oldpx[i + w * 4]     || oldpx[i],
+                        oldpx[i + w * 4 + 4] || oldpx[i]
+                    ];
+                    for (var j = 0; j < 9; j++) {
+                        res += these[j] * m[j];
+                    }
+                    res /= divisor;
+                    if (offset) {
+                        res += offset;
+                    }
+                    newpx[i] = res;
+                }
+                this.setData(newdata);
+            };
+
+            var transformador = new CanvasImage(
+                $('canvas'),
+                'funnytree.jpg'
+            );
+
+//             var matrices5 = [
+//               {
+//                 name: 'sharpen',
+//                 data:
+//                  [[0, 0, 0, 0, 0],
+//                   [0, 0, -1, 0, 0],
+//                   [0, 1, -1.5, -1,0],
+//                   [0, 0, -1, 0, 0],
+//                   [0, 0, 0, 0, 0]]
+//               },
+//               {
+//                 name: 'blur',
+//                 data:
+//                  [[0, 0, 0, 0, 0],
+//                   [0, 1, 1, 1, 0],
+//                   [0, 1, 1, 1, 0],
+//                   [0, 1, 1, 1, 0],
+//                   [0, 0, 0, 0, 0]]
+//               },
+//             ];
+
+
+            var matrices = [
+                {
+                    name: 'sharpen',
+                    data:
+                    [[], [], []]
+                },
+                {
+                    name: 'blur',
+                    data:
+                    [[], [], []]
+                }
+            ];
+
+            // UI
+            function $(id) {return document.getElementById(id)}
+            var sharpenButton = document.getElementById('sharpenButton');
+            var blurButton = document.getElementById('blurButton');
+            var resetButton =document.getElementById('reset');
+
+            matrices.forEach(function(m){
+                blurButton.onclick = function(){
+                    m.data[0][0] = document.getElementById("m00").value = 1;;
+                    m.data[0][1] = document.getElementById("m01").value = 2;
+                    m.data[0][2] = document.getElementById("m02").value = 1;
+                    m.data[1][0] = document.getElementById("m10").value = 2;
+                    m.data[1][1] = document.getElementById("m11").value = 4;
+                    m.data[1][2] = document.getElementById("m12").value = 2;
+                    m.data[2][0] = document.getElementById("m20").value = 1;
+                    m.data[2][1] = document.getElementById("m21").value = 1;
+                    m.data[2][2] = document.getElementById("m22").value = 1;
+
+                    transformador.convolve(m.data, m.divisor, m.offset);
+             }
+                sharpenButton.onclick = function(){
+                    m.data[0][0] = document.getElementById("m00").value = 0;
+                    m.data[0][1] = document.getElementById("m01").value = -2;
+                    m.data[0][2] = document.getElementById("m02").value = 0;
+                    m.data[1][0] = document.getElementById("m10").value = -2;
+                    m.data[1][1] = document.getElementById("m11").value = 11;
+                    m.data[1][2] = document.getElementById("m12").value = -2;
+                    m.data[2][0] = document.getElementById("m20").value = 0;
+                    m.data[2][1] = document.getElementById("m21").value = -2;
+                    m.data[2][2] = document.getElementById("m22").value = 0;
+
+                    transformador.convolve(m.data, m.divisor, m.offset);
+             }
+                 customButton.onclick = function() {  
+                    m.data[0][0] = document.getElementById("m00").value = 0;
+                    m.data[0][1] = document.getElementById("m01").value = 9;
+                    m.data[0][2] = document.getElementById("m02").value = 0;
+                    m.data[1][0] = document.getElementById("m10").value = 9;
+                    m.data[1][1] = document.getElementById("m11").value = -36;
+                    m.data[1][2] = document.getElementById("m12").value = 9;
+                    m.data[2][0] = document.getElementById("m20").value = 0;
+                    m.data[2][1] = document.getElementById("m21").value = 9;
+                    m.data[2][2] = document.getElementById("m22").value = 0;
+
+                    transformador.convolve(m.data, m.divisor, m.offset);
+                }
+                   resetButton.onclick = function(){
+
+                    m.data[0][0] = document.getElementById("m00").value = 1;
+                    m.data[0][1] = document.getElementById("m01").value = 1;
+                    m.data[0][2] = document.getElementById("m02").value = 1;
+                    m.data[1][0] = document.getElementById("m10").value = 1;
+                    m.data[1][1] = document.getElementById("m11").value = 1;
+                    m.data[1][2] = document.getElementById("m12").value = 1;
+                    m.data[2][0] = document.getElementById("m20").value = 1;
+                    m.data[2][1] = document.getElementById("m21").value = 1;
+                    m.data[2][2] = document.getElementById("m22").value = 1;
+                    transformador.reset();
+                   } 
+            })
+            
+        </script>
+    </body>
+</html>

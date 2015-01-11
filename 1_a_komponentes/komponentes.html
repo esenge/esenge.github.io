@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <input id="uploadedImage" type="file">
+    <button id="red">RED</button>
+    <button id="green">GREEN</button>
+    <button id="blue">BLUE</button>
+    <div>
+      <div id= "original" style="float: left;">
+        <p>Oriģinālais attēls</p>
+         <canvas id="originalImage" width="470" height="430"></canvas>
+      </div>
+      <div id="new" style="float: left;">
+        <p>Iegūtais attēls</p>
+        <canvas id="myCanvas" width="1000" height="700"></canvas>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+
+      var canvas = document.getElementById('myCanvas');
+      var context = canvas.getContext('2d');
+      function setPixel(imageData, x, y, r, g, b, a) {
+          index = (x + y * imageData.width) * 4;
+          imageData.data[index+0] = r;
+          imageData.data[index+1] = g;
+          imageData.data[index+2] = b;
+          imageData.data[index+3] = a;
+         }
+        function drawImageRED(imageObj) {
+          var imageX = 69;
+          var imageY = 255;
+          var imageWidth = imageObj.width;
+          var imageHeight = imageObj.height;
+
+          // rezultāta attēls būs par imageHeight platāks, jo katru rindu pabīda par 1px
+          // imageHeight+255 jo stabiņa garums var būt 0..255
+          var result = context.createImageData(imageWidth+imageHeight,imageHeight+255);
+
+           // iegūst attēla datus
+          context.drawImage(imageObj, imageX, imageY);
+          var imageData = context.getImageData(imageX, imageY, imageWidth, imageHeight);
+          var data = imageData.data;
+
+          // iterate over all pixels based on x and y coordinates
+          for(var y = 0; y < imageHeight; y++) {
+            // loop through each column
+            for(var x = 0; x < imageWidth; x++) {
+              var red = data[((imageWidth * y) + x) * 4];
+              var green = 0;
+              var blue = 0;
+              var height = 255 -red;  // izrēķina pikseļa augstumu
+              // x+y veic horizontālu parbīdi
+                // plakans attēls
+                setPixel(result, x+y, y+255, red, green, blue,255);
+                // ar dziļumu
+                setPixel(result, x+y, y+height, red, green, blue,255);
+            }
+          }
+
+          // overwrite original image
+          context.putImageData(result, 0,0);
+        }
+
+        function drawImageGREEN(imageObj) {
+          var imageX = 69;
+          var imageY = 255;
+          var imageWidth = imageObj.width;
+          var imageHeight = imageObj.height;
+
+          // rezultāta attēls būs par imageHeight platāks, jo katru rindu pabīda par 1px
+          // imageHeight+255 jo stabiņa garums var būt 0..255
+          var result = context.createImageData(imageWidth+imageHeight,imageHeight+255);
+
+           // iegūst attēla datus
+          context.drawImage(imageObj, imageX, imageY);
+          var imageData = context.getImageData(imageX, imageY, imageWidth, imageHeight);
+          var data = imageData.data;
+
+          // iterate over all pixels based on x and y coordinates
+          for(var y = 0; y < imageHeight; y++) {
+            // loop through each column
+            for(var x = 0; x < imageWidth; x++) {
+              var red = 0;
+              var green = data[((imageWidth * y) + x) * 4 + 1];
+              var blue = 0;
+              var height = 255 -green;  // izrēķina pikseļa augstumu
+              // x+y veic horizontālu parbīdi
+                // plakans attēls
+                setPixel(result, x+y, y+255, red, green, blue,255);
+
+                // ar dziļumu
+                setPixel(result, x+y, y+height, red, green, blue,255);
+            }
+          }
+          // overwrite original image
+          context.putImageData(result, 0,0);
+        }
+
+        function drawImageBLUE(imageObj) {
+          var imageX = 69;
+          var imageY = 255;
+          var imageWidth = imageObj.width;
+          var imageHeight = imageObj.height;
+
+          // rezultāta attēls būs par imageHeight platāks, jo katru rindu pabīda par 1px
+          // imageHeight+255 jo stabiņa garums var būt 0..255
+          var result = context.createImageData(imageWidth+imageHeight,imageHeight+255);
+
+           // iegūst attēla datus
+          context.drawImage(imageObj, imageX, imageY);
+          var imageData = context.getImageData(imageX, imageY, imageWidth, imageHeight);
+          var data = imageData.data;
+
+          // iterate over all pixels based on x and y coordinates
+          for(var y = 0; y < imageHeight; y++) {
+            // loop through each column
+            for(var x = 0; x < imageWidth; x++) {
+              var red = 0;
+              var green = 0;
+              var blue = data[((imageWidth * y) + x) * 4 + 2];
+              var height = 255 -blue;  // izrēķina pikseļa augstumu
+              // x+y veic horizontālu parbīdi
+                // plakans attēls
+                setPixel(result, x+y, y+255, red, green, blue,255);
+                // ar dziļumu
+                setPixel(result, x+y, y+height, red, green, blue,255);
+            }
+          }
+          // overwrite original image
+          context.putImageData(result, 0,0);
+        }
+
+        var redButton = document.getElementById('red');
+        var greenButton = document.getElementById('green');
+        var blueButton = document.getElementById('blue');
+        var imageObj = new Image();
+        redButton.onclick = function() {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          drawImageRED(imageObj);
+        };
+        greenButton.onclick = function() {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          drawImageGREEN(imageObj);
+        };
+        blueButton.onclick = function() {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          drawImageBLUE(imageObj);
+        };
+
+        var imageContext = document.getElementById('originalImage').getContext('2d');
+
+        document.getElementById('uploadedImage').onchange = function(e){
+          var image = new Image;
+          image.src = URL.createObjectURL(e.target.files[0]);
+          image.onload = function(){
+            imageContext.save();
+            imageContext.setTransform(1, 0, 0, 1, 0, 0);
+            imageContext.clearRect(0, 0, imageContext.canvas.width, imageContext.canvas.height);
+            imageContext.restore();
+
+            imageWidth = image.width;
+            imageHeight = image.height;
+
+            imageContext.drawImage(image, 0, 0);
+            imageObj.src = URL.createObjectURL(e.target.files[0]);
+            context.clearRect(0, 0, canvas.width, canvas.height);
+          }
+        };
+    </script>
+  </body>
+</html>      

@@ -1,0 +1,144 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <input type="file" id="input"/><br/>
+        <canvas id="canvas" height="500px" width="500px"></canvas>
+
+        <script type="text/javascript">
+            var context = document.getElementById('canvas').getContext('2d');
+            var input = document.getElementById('input');
+
+            input.onchange = function(e){
+                var img = new Image();
+                img.src = URL.createObjectURL(e.target.files[0]);
+
+                img.onload = function(){
+                    if(img.height > 500){
+                        height = 500;
+                    } else {
+                        height = img.height;
+                    }
+                    if(img.width > 500){
+                        width = 500;
+                    } else{
+                        width = img.width;
+                    }
+
+                    var temp_image = document.createElement('canvas').getContext('2d');
+                    temp_image.canvas.width = img.width;
+                    temp_image.canvas.height = img.height;
+                    temp_image.drawImage(img, 0, 0, img.width, img.height);
+
+                    var lines = [];
+                    var image = temp_image.getImageData(0, 0, img.width, img.height);
+                    var iw = img.width * 4
+                    var ih = iw * img.height;
+
+                    function black(idx){
+                        return image.data[idx + 0] < 0.4 && image.data[idx + 1] < 0.4 && image.data[idx + 2] < 0.4;
+                    }
+
+                    function neighbours(idx){
+                        if(!black(idx)){
+                        	return false;
+                        }
+                        var n = [];
+                        var r = idx % iw;
+                        if(r > 4 && black(idx - 4)){
+                        	n.push(idx - 4);
+                        }
+                        if(r + 4 < iw && black(idx - 4)){
+                        	n.push(idx + 4);
+                        }
+                        if(idx > iw && black(idx - iw)){
+                        	n.push(idx - iw);
+                        }
+                        if(idx + iw < ih && black(idx + iw)){
+                        	n.push(idx + iw);
+                        }
+                        if(n.length == 0 || n.length > 2){
+                        	return false;
+                        }
+                        image.data[idx + 0] = 255;
+                        image.data[idx + 1] = 255;
+                        image.data[idx + 2] = 255;
+                        return n;
+                    }
+
+                    function next(idx){
+                        var n = neighbours(idx);
+                        if(!n || n.length != 1){
+                        	return false;
+                        } else{
+                        	return n[0];
+                        }
+                    }
+
+                    for(var i = 0; i < ih; i += 4){
+                        var n = neighbours(i);
+                        if(n){
+                            var l = [i];
+                            var p = n[0];
+                            while(p){
+                                l.push(p);
+                                p = next(p);
+                            }
+
+                            l.reverse();
+                            if(n[i] == null){
+                            	p = false;
+                            } else{
+                            	p = n[i];
+                            }
+                            while(p){
+                                l.push(p);
+                                p = next(p);
+                            }
+
+                            l.reverse();
+                            lines.push(l);
+                        }
+                    }
+
+                    function rgb(h, s, v){
+                        var c = v * s;
+                        var h = Math.floor(h * 6); 
+                        var x = c * (1 - Math.abs(h % 2 - 1));
+                        var m = v - c;
+                        switch(h){
+                            case 0: c = [c, x, 0]; break;
+                            case 1: c = [x, c, 0]; break;
+                            case 2: c = [0, c, x]; break;
+                            case 3: c = [0, x, c]; break;
+                            case 4: c = [x, 0, c]; break;
+                            case 5: c = [c, 0, x]; break;
+                            default: c = [0, 0, 0]; break;
+                        };
+
+                        return[
+                        		(c[0] + m) * 255, 
+	                            (c[1] + m) * 255, 
+	                            (c[2] + m) * 255
+                            ];
+                    }
+                    var h = 1 / lines.length;
+                    var i = 0;
+                    while (lines[i] != null){
+                        var l = lines[i];
+                        var c = rgb(h * i, 0.7, 0.7);
+                        for(var p = 0; p < l.length; p++){
+                            image.data[l[p] + 0] = c[0];
+                            image.data[l[p] + 1] = c[1];
+                            image.data[l[p] + 2] = c[2];
+                        }
+                        i++;
+                    }
+                    temp_image.putImageData(image, 0, 0);
+                    context.drawImage(temp_image.canvas, 0, 0, width, height);
+                }
+            };
+        </script>
+    </body>
+</html>

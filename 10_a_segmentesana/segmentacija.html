@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <input id="uploadedImage" type="file">
+    <label for="slieksnis">Slieksnis</label>
+    <input id="slieksnis" type="text" value="100">
+    <input id="generet" type="button" value="Segmentēt">
+    <div>
+      <div id= "original" style="float: left;">
+        <p>Oriģinālais attēls</p>
+        <canvas id="originalaisAttels" width="470" height="500"></canvas>
+      </div>
+      <div id="new" style="float: left; margin-left: 50px;">
+        <p>Iegūtais attēls</p>
+        <canvas id="segmentetsAttels" width="470" height="500"></canvas>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var segmentationButton = document.getElementById('generet');
+      var slieksnisInput = document.getElementById('slieksnis');
+      var imageContext = document.getElementById('originalaisAttels').getContext('2d');
+      var segmentationContext = document.getElementById('segmentetsAttels').getContext('2d');
+      var imageWidth;
+      var imageHeight;
+
+      document.getElementById('uploadedImage').onchange = function(e){
+        var image = new Image;
+        image.src = URL.createObjectURL(e.target.files[0]);
+        image.onload = function(){
+          imageContext.save();
+          imageContext.setTransform(1, 0, 0, 1, 0, 0);
+          imageContext.clearRect(0, 0, imageContext.canvas.width, imageContext.canvas.height);
+          imageContext.restore();
+
+          imageWidth = image.width;
+          imageHeight = image.height;
+
+          imageContext.drawImage(image, 0, 0);
+        }
+      };
+
+      segmentationButton.onclick = function(){
+        segmentationContext.save();
+        segmentationContext.setTransform(1, 0, 0, 1, 0, 0);
+        segmentationContext.clearRect(0, 0, segmentationContext.canvas.width, segmentationContext.canvas.height);
+        segmentationContext.restore();
+
+        var slieksnisImage = slieksnis(imageContext.getImageData(0, 0, imageWidth, imageHeight), slieksnisInput.value);
+
+        segmentationContext.putImageData(slieksnisImage, 0, 0);
+      }
+       function slieksnis(pixels, slieksnis){
+        var data = pixels.data;
+        for(var i = 0; i < data.length; i += 4){
+          var r = data[i];
+          var g = data[i+1];
+          var b = data[i+2];
+          var value = (0.2126*r + 0.7152*g + 0.0722*b);
+          if(value >= slieksnis){
+            value = 255;
+          } else{
+            value = 0;
+          }
+          data[i] = data[i+1] = data[i+2] = value;
+        }
+        return pixels;
+       }
+    </script>
+  </body>
+</html>      
