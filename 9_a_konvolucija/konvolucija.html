@@ -110,28 +110,6 @@
                 'funnytree.jpg'
             );
 
-//             var matrices5 = [
-//               {
-//                 name: 'sharpen',
-//                 data:
-//                  [[0, 0, 0, 0, 0],
-//                   [0, 0, -1, 0, 0],
-//                   [0, 1, -1.5, -1,0],
-//                   [0, 0, -1, 0, 0],
-//                   [0, 0, 0, 0, 0]]
-//               },
-//               {
-//                 name: 'blur',
-//                 data:
-//                  [[0, 0, 0, 0, 0],
-//                   [0, 1, 1, 1, 0],
-//                   [0, 1, 1, 1, 0],
-//                   [0, 1, 1, 1, 0],
-//                   [0, 0, 0, 0, 0]]
-//               },
-//             ];
-
-
             var matrices = [
                 {
                     name: 'sharpen',
@@ -179,15 +157,15 @@
                     transformador.convolve(m.data, m.divisor, m.offset);
              }
                  customButton.onclick = function() {  
-                    m.data[0][0] = document.getElementById("m00").value = 0;
-                    m.data[0][1] = document.getElementById("m01").value = 9;
-                    m.data[0][2] = document.getElementById("m02").value = 0;
-                    m.data[1][0] = document.getElementById("m10").value = 9;
-                    m.data[1][1] = document.getElementById("m11").value = -36;
-                    m.data[1][2] = document.getElementById("m12").value = 9;
-                    m.data[2][0] = document.getElementById("m20").value = 0;
-                    m.data[2][1] = document.getElementById("m21").value = 9;
-                    m.data[2][2] = document.getElementById("m22").value = 0;
+                    m.data[0][0] = parseInt(document.getElementById("m00").value);
+                    m.data[0][1] = parseInt(document.getElementById("m01").value);
+                    m.data[0][2] = parseInt(document.getElementById("m02").value);
+                    m.data[1][0] = parseInt(document.getElementById("m10").value);
+                    m.data[1][1] = parseInt(document.getElementById("m11").value);
+                    m.data[1][2] = parseInt(document.getElementById("m12").value);
+                    m.data[2][0] = parseInt(document.getElementById("m20").value);
+                    m.data[2][1] = parseInt(document.getElementById("m21").value);
+                    m.data[2][2] = parseInt(document.getElementById("m22").value);
 
                     transformador.convolve(m.data, m.divisor, m.offset);
                 }
